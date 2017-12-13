@@ -1,0 +1,51 @@
+setwd("C:/Users/jmclaughlin/Desktop")
+
+
+source1 <- read.csv(file = "source4.txt",header = TRUE, sep = ';')
+source2 <- read.csv(file = "source3.txt",header = TRUE, sep = ';')
+
+colnames(source1)[2] <- "name"
+colnames(source2)[2] <- "name"
+source1.devices <- source1
+source2.devices <- source2
+
+
+install.packages('string')
+library(stringdist)
+
+distance.methods<-c('jw')
+dist.methods<-list()
+for(m in 1:length(distance.methods))
+{
+  dist.name.enh<-matrix(NA, ncol = length(source2.devices$name),nrow = length(source1.devices$name))
+  for(i in 1:length(source2.devices$name)) {
+    for(j in 1:length(source1.devices$name)) { 
+      dist.name.enh[j,i]<-stringdist(tolower(source2.devices[i,]$name),tolower(source1.devices[j,]$name),method = distance.methods[m])      
+      #adist.enhance(source2.devices[i,]$name,source1.devices[j,]$name)
+    }  
+  }
+  dist.methods[[distance.methods[m]]]<-dist.name.enh
+}
+
+match.s1.s2.enh<-NULL
+for(m in 1:length(dist.methods))
+{
+  
+  dist.matrix<-as.matrix(dist.methods[[distance.methods[m]]])
+  min.name.enh<-apply(dist.matrix, 2, base::min)
+  for(i in 1:ncol(dist.matrix))
+  {
+    s1.i<-match(min.name.enh[i],dist.matrix[,i])
+    s2.i<-i
+    match.s1.s2.enh<-rbind(data.frame(s2.i=s2.i,s1.i=s1.i,s2name=source2.devices[s2.i,]$name, s1name=source1.devices[s1.i,]$name, adist=min.name.enh[i]),match.s1.s2.enh)
+  }
+}
+match.s1.s2.enh
+
+
+
+
+# Let's have a look at the results
+##library(reshape2)
+##matched.names.matrix<-dcast(match.s1.s2.enh,s2.i+s1.i+s2name+s1name~method, value.var = "adist")
+##View(matched.names.matrix)
